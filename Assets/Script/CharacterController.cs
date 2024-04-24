@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,7 +9,7 @@ public interface IJob
 
 public class CharacterController : MonoBehaviour
 {
-    // Á÷¾÷À» ¹«±â·Î »ı°¢ÇÏ°í ½ºÆ®·¡Æ¼Áö ÆĞÅÏÀ¸·Î ±¸Çö
-        // Á÷¾÷ º¯°æ½Ã Set¿¡ ÇÁ·ÎÆÛÆ¼¸¦ »ç¿ëÇÏ¿© GameManager¿¡¼­ Á÷¾÷¿¡ ¸Â´Â ½ºÅİÀ¸·Î ÃÊ±âÈ­ ½ÃÄÑÁÖ±â
-    // ÇÃ·¹ÀÌ¾î´Â State Machine ÆĞÅÏÀ¸·Î °¢°¢ ±¸ºĞÇØ¼­ ±¸Çö
+    // ì§ì—…ì„ ë¬´ê¸°ë¡œ ìƒê°í•˜ê³  ìŠ¤íŠ¸ë˜í‹°ì§€ íŒ¨í„´ìœ¼ë¡œ êµ¬í˜„
+        // ì§ì—… ë³€ê²½ì‹œ Setì— í”„ë¡œí¼í‹°ë¥¼ ì‚¬ìš©í•˜ì—¬ GameManagerì—ì„œ ì§ì—…ì— ë§ëŠ” ìŠ¤í…Ÿìœ¼ë¡œ ì´ˆê¸°í™” ì‹œì¼œì£¼ê¸°
+    // í”Œë ˆì´ì–´ëŠ” State Machine íŒ¨í„´ìœ¼ë¡œ ê°ê° êµ¬ë¶„í•´ì„œ êµ¬í˜„
 }
