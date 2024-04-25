@@ -26,9 +26,12 @@ public class GameManager : MonoBehaviour
     public int monsterAttackPower;
     public int monsterAttackDelay;
     public float mosterAttackDistance;
+    public float mosterSearchRange;
     [Header("Character")]
     public float characterSpawnTime;
     public List<CharacterStatus> characterStatusList;
+    [Header("GameInfo")]
+    [SerializeField] List<CharController> charList;
 
     public static GameManager Instance 
     {
@@ -43,4 +46,20 @@ public class GameManager : MonoBehaviour
         else
             Destroy(gameObject);
     }
+
+    public CharController NearChar(Vector2 pos)
+	{
+        CharController result = null;
+
+        foreach(CharController character in charList)
+		{
+            if (Vector2.Distance(pos, character.transform.position) < mosterSearchRange)
+			{
+                if (result == null || Vector2.Distance(result.transform.position, pos) > Vector2.Distance(character.transform.position, pos))
+                    result = character;
+			}
+		}
+
+        return result;
+	}
 }

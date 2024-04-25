@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
-using static UnityEngine.RuleTile.TilingRuleOutput;
 
 
 public enum MonsterState
@@ -28,13 +26,13 @@ public class MonsterIdle : CharState<MonsterController>
     public void OperateExit(MonsterController sender) { controller.Animator.SetBool("Idle", false); }
     public void OperateUpdate(MonsterController sender) 
     {
-        attackDelay -= Time.deltaTime;
+        if (controller.target == null)
+            return;
 
-        if (controller.target != null && Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.AttackDistance)
-        {
+        if (Vector2.Distance(controller.transform.position, controller.target.transform.position) > controller.AttackDistance)
+            controller.Sm.SetState(controller.DicState[MonsterState.Run]);
+        else
             controller.Sm.SetState(controller.DicState[MonsterState.Attack]);
-            attackDelay = GameManager.Instance.monsterAttackDelay;
-        }
 
     }
     public void OperateFixedUpdate(MonsterController sender) { }
@@ -57,7 +55,12 @@ public class MonsterRun : CharState<MonsterController>
         if (controller.target == null)
             return;
 
+        controller.ScaleInversion(controller.transform.position.x < controller.target.transform.position.x ? true : false);
+
         controller.transform.position = Vector2.MoveTowards(controller.transform.position, controller.target.transform.position, 1 * Time.fixedDeltaTime);
+
+        if (Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.AttackDistance)
+            controller.Sm.SetState(controller.DicState[MonsterState.Attack]);
     }
 }
 
@@ -103,7 +106,6 @@ public class MonsterController : MonoBehaviour
     public float AttackDelay { get; private set; }
     public float AttackDistance { get; private set; }
 
-    public List<CharController> TargetList { get; private set; }
     public CharController target;
 
     private void Awake()
@@ -113,8 +115,6 @@ public class MonsterController : MonoBehaviour
 
     private void Start()
     {
-        TargetList = new List<CharController>();
-
         MaxHp = GameManager.Instance.monsterHp;
         AttackPower = GameManager.Instance.monsterAttackPower;
         AttackDelay = GameManager.Instance.monsterAttackDelay;
@@ -138,14 +138,10 @@ public class MonsterController : MonoBehaviour
 
     private void Update()
     {
-        foreach (CharController ch in TargetList)
-        {
-            if (target == null || Vector2.Distance(transform.position, target.transform.position) > Vector2.Distance(transform.position, ch.transform.position))
-                target = ch;
-        }
+        target = GameManager.Instance.NearChar(transform.position);
 
-        if (TargetList.Count == 0)
-            target = null;
+        if (target == null && Sm.CurState != DicState[MonsterState.Idle])
+            Sm.SetState(DicState[MonsterState.Idle]);
 
         Sm.DoOperateUpdate();
     }
@@ -155,31 +151,14 @@ public class MonsterController : MonoBehaviour
         Sm.DoOperateFixedUpdate();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if(collision.transform.CompareTag("Character") && collision.transform.GetComponent<CharController>())
-        {
-            CharController target = collision.transform.GetComponent<CharController>();
-
-            if(TargetList.Contains(target) == false)
-                TargetList.Add(target);
-        }
-    }
-
-
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if (collision.transform.CompareTag("Character") && collision.transform.GetComponent<CharController>())
-        {
-            CharController target = collision.transform.GetComponent<CharController>();
-
-            if (TargetList.Contains(target) == true)
-                TargetList.Remove(target);
-        }
-    }
-
     public void AttackEnd()
     {
         Sm.SetState(DicState[MonsterState.Idle]);
     }
+
+    public void ScaleInversion(bool check)
+	{
+        if ((check && transform.localScale.x < 0) || (!check && transform.localScale.x > 0))
+            transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
+	}
 }
