@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -30,7 +31,7 @@ public class CharIdle : CharState<CharController>
 	{
         controller = sender;
 
-        controller.Anim.SetBool("Idle", true);
+        controller.charJob.animator.SetBool("Idle", true);
 	}
 
     public void OperateUpdate(CharController sender) { }
@@ -38,7 +39,7 @@ public class CharIdle : CharState<CharController>
 
     public void OperateExit(CharController sender) 
     {
-        controller.Anim.SetBool("Idle", false);
+        controller.charJob.animator.SetBool("Idle", false);
     }
 }
 
@@ -50,7 +51,7 @@ public class CharWalk : CharState<CharController>
     {
         controller = sender;
 
-        controller.Anim.SetBool("Walk", true);
+        controller.charJob.animator.SetBool("Walk", true);
     }
 
     public void OperateUpdate(CharController sender) { }
@@ -58,7 +59,7 @@ public class CharWalk : CharState<CharController>
 
     public void OperateExit(CharController sender) 
     {
-        controller.Anim.SetBool("Walk", false);
+        controller.charJob.animator.SetBool("Walk", false);
     }
 }
 
@@ -70,7 +71,7 @@ public class CharCasting : CharState<CharController>
     {
         controller = sender;
 
-        controller.Anim.SetBool("Casting", true);
+        controller.charJob.animator.SetBool("Casting", true);
     }
 
     public void OperateUpdate(CharController sender) { }
@@ -78,7 +79,7 @@ public class CharCasting : CharState<CharController>
 
     public void OperateExit(CharController sender)
     {
-        controller.Anim.SetBool("Casting", false);
+        controller.charJob.animator.SetBool("Casting", false);
     }
 }
 
@@ -90,7 +91,7 @@ public class CharAttack : CharState<CharController>
     {
         controller = sender;
 
-        controller.Anim.SetBool("Attack", true);
+        controller.charJob.animator.SetBool("Attack", true);
     }
 
     public void OperateUpdate(CharController sender) { }
@@ -98,7 +99,7 @@ public class CharAttack : CharState<CharController>
 
     public void OperateExit(CharController sender)
     {
-        controller.Anim.SetBool("Attack", false);
+        controller.charJob.animator.SetBool("Attack", false);
     }
 }
 
@@ -110,7 +111,7 @@ public class CharHurt : CharState<CharController>
     {
         controller = sender;
 
-        controller.Anim.SetBool("Hurt", true);
+        controller.charJob.animator.SetBool("Hurt", true);
     }
 
     public void OperateUpdate(CharController sender) { }
@@ -118,7 +119,7 @@ public class CharHurt : CharState<CharController>
 
     public void OperateExit(CharController sender)
     {
-        controller.Anim.SetBool("Hurt", false);
+        controller.charJob.animator.SetBool("Hurt", false);
     }
 }
 
@@ -130,7 +131,7 @@ public class CharDie : CharState<CharController>
     {
         controller = sender;
 
-        controller.Anim.SetBool("Die", true);
+        controller.charJob.animator.SetBool("Die", true);
     }
 
     public void OperateUpdate(CharController sender) { }
@@ -138,7 +139,7 @@ public class CharDie : CharState<CharController>
 
     public void OperateExit(CharController sender)
     {
-        controller.Anim.SetBool("Die", false);
+        controller.charJob.animator.SetBool("Die", false);
     }
 }
 
@@ -150,7 +151,7 @@ public class CharVictory : CharState<CharController>
     {
         controller = sender;
 
-        controller.Anim.SetBool("Victory", true);
+        controller.charJob.animator.SetBool("Victory", true);
     }
 
     public void OperateUpdate(CharController sender) { }
@@ -158,7 +159,7 @@ public class CharVictory : CharState<CharController>
 
     public void OperateExit(CharController sender)
     {
-        controller.Anim.SetBool("Victory", false);
+        controller.charJob.animator.SetBool("Victory", false);
     }
 }
 
@@ -215,41 +216,49 @@ public enum CharJob
     Archer,
     Priest,
 }
-
-public interface ICharJob
+[Serializable]
+public class ICharJob
 {
-    void Attack();
+    public string name;
+    public GameObject gameObject;
+    public Animator animator;
+
+    public virtual void Attack()
+    {
+
+    }
 }
 
 public class Knight : ICharJob
 {
-    public void Attack()
+    public override void Attack()
     {
-
+        Debug.Log("탱커");
     }
 }
 
 public class Thief : ICharJob
 {
-    public void Attack()
+    public override void Attack()
     {
-
+        Debug.Log("근거리 딜러");
     }
 }
 
 public class Archer : ICharJob
 {
-    public void Attack()
+    [SerializeField] GameObject arrow;
+    public override void Attack()
     {
-
+        Debug.Log("원거리 딜러");
     }
 }
 
 public class Priest : ICharJob
 {
-    public void Attack()
+    public override void Attack()
     {
-
+        Debug.Log("힐러");
     }
 }
 
@@ -263,33 +272,21 @@ public class CharController : MonoBehaviour
     public Dictionary<CharState, CharState<CharController>> DicState { get; private set; }
     public StateMachine<CharController> Sm { get; private set; }
 
-    public Animator Anim { get; private set; }
+    public CharJob job;
 
-    private CharJob job;
-    public CharJob Job 
-    {
-        get { return job; }
-        set 
-        {
-            job = value;
-
-            charJob = DicJob[job];
-            status = GameManager.Instance.characterStatusList[(int)job];
-        } 
-    }
-
-    public Dictionary<CharJob, ICharJob> DicJob { get; private set; }
-    private ICharJob charJob;
+    public List<ICharJob> jobList;
+    public ICharJob charJob { get; private set; }
 
     private CharacterStatus status;
 
-    private void Awake()
-    {
-        Anim = GetComponent<Animator>();
-    }
-
     private void Start()
 	{
+        // 초기 직업 설정
+        charJob = jobList[(int)job];
+        status = GameManager.Instance.characterStatusList[(int)job];
+        charJob.gameObject.SetActive(true);
+        charJob.Attack();
+
         CharState<CharController> idle = new CharIdle();
         CharState<CharController> walk = new CharWalk();
         CharState<CharController> casting = new CharCasting();
@@ -310,22 +307,6 @@ public class CharController : MonoBehaviour
 		};
 
         Sm = new StateMachine<CharController>(this, DicState[CharState.Idle]);
-
-        ICharJob knight = new Knight();
-        ICharJob thief = new Thief();
-        ICharJob archer = new Archer();
-        ICharJob priest = new Priest();
-
-        DicJob = new Dictionary<CharJob, ICharJob>
-        {
-            { CharJob.Knight, knight},
-            { CharJob.Thief, thief },
-            { CharJob.Archer, archer },
-            { CharJob.Priest, priest }
-        };
-
-        // 초기 직업 설정
-        charJob = DicJob[CharJob.Knight];
     }
 
 	private void Update()
@@ -341,5 +322,22 @@ public class CharController : MonoBehaviour
     public void CastingEnd()
     {
         Sm.SetState(DicState[CharState.Attack]);
+    }
+
+    [ContextMenu("리스트 초기화")]
+    public void SetList()
+    {
+        ICharJob knight = new Knight();
+        ICharJob thief = new Thief();
+        ICharJob archer = new Archer();
+        ICharJob priest = new Priest();
+
+        jobList = new List<ICharJob>
+        {
+            knight,
+            thief,
+            archer,
+            priest
+        };
     }
 }

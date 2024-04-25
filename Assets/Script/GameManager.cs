@@ -11,7 +11,7 @@ public class CharacterStatus
     public int attackPower;
     public int attackDistance;
     public float attackDelay;
-    public int skillDistance;
+    public float skillDistance;
     public float skillDelay;
 }
 
@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
     public int monsterHp;
     public int monsterAttackPower;
     public int monsterAttackDelay;
-    public int mosterAttackDistance;
+    public float mosterAttackDistance;
     [Header("Character")]
     public float characterSpawnTime;
     public List<CharacterStatus> characterStatusList;
