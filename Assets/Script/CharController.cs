@@ -256,8 +256,6 @@ public class CharController : MonoBehaviour
 
     public virtual void Start()
 	{
-        Debug.Log(1);
-
         CharState<CharController> idle = new CharIdle();
         CharState<CharController> walk = new CharWalk();
         CharState<CharController> casting = new CharCasting();
@@ -282,9 +280,11 @@ public class CharController : MonoBehaviour
 
     public virtual void Update()
 	{
-        target = GameManager.Instance.NearMonster(transform.position, GameManager.Instance.FirstChar() == this ? 0 : status.attackDistance);
+        CharController firstChar = GameManager.Instance.FirstChar();
 
-        if (Sm.CurState == DicState[CharState.Idle])
+        target = GameManager.Instance.NearMonster(transform.position, firstChar == this ? 0 : status.attackDistance);
+
+        if (((firstChar == this && target != null) || (firstChar != this && firstChar.Sm.CurState != firstChar.DicState[CharState.Idle])) && Sm.CurState == DicState[CharState.Idle])
             Sm.SetState(DicState[CharState.Walk]);
 
         Sm.DoOperateUpdate();
@@ -302,7 +302,8 @@ public class CharController : MonoBehaviour
 
     public void AttackEnd()
     {
-
+        if (target != null && Vector2.Distance(transform.position, target.transform.position) < status.attackDistance)
+            target.GetDamage(status.attackPower);
     }
 
     public void ScaleInversion(bool check)

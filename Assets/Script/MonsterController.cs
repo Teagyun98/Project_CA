@@ -102,6 +102,7 @@ public class MonsterController : MonoBehaviour
     public Animator Animator { get; private set; }
 
     public int MaxHp { get; private set; }
+    private int hp;
     public int AttackPower { get; private set; }
     public float AttackDelay { get; private set; }
     public float AttackDistance { get; private set; }
@@ -116,6 +117,7 @@ public class MonsterController : MonoBehaviour
     private void Start()
     {
         MaxHp = GameManager.Instance.monsterHp;
+        hp = MaxHp;
         AttackPower = GameManager.Instance.monsterAttackPower;
         AttackDelay = GameManager.Instance.monsterAttackDelay;
         AttackDistance = GameManager.Instance.mosterAttackDistance;
@@ -161,4 +163,18 @@ public class MonsterController : MonoBehaviour
         if ((check && transform.localScale.x < 0) || (!check && transform.localScale.x > 0))
             transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
 	}
+
+    public void GetDamage(int damage)
+    {
+        hp -= damage;
+
+        if (hp < 0)
+            Sm.SetState(DicState[MonsterState.Death]);
+    }
+
+    public void Resurrection()
+    {
+        hp = MaxHp;
+        Sm.SetState(DicState[MonsterState.Idle]);
+    }
 }

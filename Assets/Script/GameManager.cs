@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     private static GameManager instance;
 
     [Header("GameSetting\n\nMoster")]
+    [SerializeField] private MonsterController goblin;
     public float monsterSpawnTime;
     public int monsterMaxActiveCount;
     public int monsterHp;
@@ -48,13 +49,18 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    private void FixedUpdate()
+    {
+        Camera.main.transform.position = FirstChar().transform.position + new Vector3(0,0,-10);
+    }
+
     public CharController NearChar(Vector2 pos)
 	{
         CharController result = null;
 
         foreach(CharController character in charList)
 		{
-            if (Vector2.Distance(pos, character.transform.position) < mosterSearchRange)
+            if (Vector2.Distance(pos, character.transform.position) < mosterSearchRange && character.Sm.CurState != character.DicState[CharState.Die])
 			{
                 if (result == null || Vector2.Distance(result.transform.position, pos) > Vector2.Distance(character.transform.position, pos))
                     result = character;
@@ -76,6 +82,9 @@ public class GameManager : MonoBehaviour
             if(monsterArea.GetChild(i).GetComponent<MonsterController>())
             {
                 monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
+
+                if ( monster.Sm != null && monster.Sm.CurState == monster.DicState[MonsterState.Death])
+                    monster = null;
             }
 
             // 첫번째 캐릭터는 탐색 범위와 상관없이 몬스터를 쫒는다.
@@ -103,5 +112,27 @@ public class GameManager : MonoBehaviour
         }
 
         return result;
+    }
+
+    public void SpawnGoblin()
+    {
+        MonsterController _goblin  = null;
+
+        for(int i = 0; i < monsterArea.childCount; i++) 
+        {
+            MonsterController monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
+
+            if (monster.Sm.CurState == monster.DicState[MonsterState.Death])
+            {
+                _goblin = monster;
+                _goblin.Resurrection();
+                break;
+            }
+        }
+
+        if (_goblin == null)
+            _goblin = Instantiate(goblin, monsterArea);
+
+        _goblin.transform.position = FirstChar().transform.position + new Vector3(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-10, 10));
     }
 }
