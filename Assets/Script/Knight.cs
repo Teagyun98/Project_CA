@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class Knight : CharController
 {
@@ -10,7 +10,7 @@ public class Knight : CharController
     public override void Start()
     {
         base.Start();
-        // ÃÊ±â Á÷¾÷ ¼³Á¤
+        // ì´ˆê¸° ì§ì—… ì„¤ì •
         status = GameManager.Instance.characterStatusList[0];
     }
 

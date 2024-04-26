@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// 캐릭터 기본 스탯 클래스
 [Serializable]
 public class CharacterStatus
 {
@@ -17,8 +18,16 @@ public class CharacterStatus
 
 public class GameManager : MonoBehaviour
 {
+    // 싱글톤
     private static GameManager instance;
 
+    public static GameManager Instance
+    {
+        get { return instance == null ? null : instance; }
+        private set { instance = value; }
+    }
+
+    // 몬스터 기초값
     [Header("GameSetting\n\nMoster")]
     [SerializeField] private MonsterController goblin;
     public float monsterSpawnTime;
@@ -28,21 +37,20 @@ public class GameManager : MonoBehaviour
     public int monsterAttackDelay;
     public float mosterAttackDistance;
     public float mosterSearchRange;
+    // 캐릭터 기초값
     [Header("Character")]
     public float characterSpawnTime;
     public List<CharacterStatus> characterStatusList;
-    [Header("GameInfo")]
-    [SerializeField] private List<CharController> charList;
-    [SerializeField] private Transform monsterArea;
 
-    public static GameManager Instance 
-    {
-        get { return instance == null ? null : instance; }
-        private set { instance = value; }
-    }
+    [Header("GameInfo")]
+    // 캐릭터 리스트
+    [SerializeField] private List<CharController> charList;
+    // 몬스터 스폰 Transform
+    [SerializeField] private Transform monsterArea;
 
     private void Awake()
     {
+        // 싱글톤
         if (instance == null)
             Instance = this;
         else
@@ -51,16 +59,20 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        // 고블린 소환 함수
         StartCoroutine(SpawnGoblin());
     }
 
     private void FixedUpdate()
     {
+        // 카메라가 첫번째 캐릭터를 따라 이동
         Camera.main.transform.position = FirstChar().transform.position + new Vector3(0,0,-10);
     }
 
+    // 가까이 있는 캐릭터 반환 함수
     public CharController NearChar(Vector2 pos)
 	{
+        // 캐릭터 리스트에서 죽지 않은 캐릭터 중 인자르 받은 위치에서 몬스터 탐색범위 안의 가장 가까운 캐릭터 반환
         CharController result = null;
 
         foreach(CharController character in charList)
@@ -75,8 +87,10 @@ public class GameManager : MonoBehaviour
         return result;
 	}
 
+    // 가까이 있는 몬스터 반환 함수
     public MonsterController NearMonster(Vector2 pos, float range) 
     {
+        // MonsterArea에서 살아있는 몬스터 중 인자로 받은 위치와 탐색 범위 안에서 가장 가까운 몬스터 반환
         MonsterController result = null;
         MonsterController monster;
 
@@ -103,6 +117,7 @@ public class GameManager : MonoBehaviour
         return result;
     }
 
+    // 캐릭터 리스트에서 살아있는 첫번째 캐릭터 반환
     public CharController FirstChar()
     {
         CharController result = null;
@@ -119,10 +134,12 @@ public class GameManager : MonoBehaviour
         return result;
     }
 
+    // 고블린 스폰 코루틴
     public IEnumerator SpawnGoblin()
     {
         MonsterController _goblin  = null;
 
+        // 풀링
         for(int i = 0; i < monsterArea.childCount; i++) 
         {
             MonsterController monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
