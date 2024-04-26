@@ -31,7 +31,8 @@ public class GameManager : MonoBehaviour
     public float characterSpawnTime;
     public List<CharacterStatus> characterStatusList;
     [Header("GameInfo")]
-    [SerializeField] List<CharController> charList;
+    [SerializeField] private List<CharController> charList;
+    [SerializeField] private Transform monsterArea;
 
     public static GameManager Instance 
     {
@@ -62,4 +63,45 @@ public class GameManager : MonoBehaviour
 
         return result;
 	}
+
+    public MonsterController NearMonster(Vector2 pos, float range) 
+    {
+        MonsterController result = null;
+        MonsterController monster = null;
+
+        for (int i = 0; i< monsterArea.childCount; i++)
+        {
+            monster = null;
+
+            if(monsterArea.GetChild(i).GetComponent<MonsterController>())
+            {
+                monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
+            }
+
+            // 첫번째 캐릭터는 탐색 범위와 상관없이 몬스터를 쫒는다.
+            if(monster != null && (range == 0 || Vector2.Distance(pos, monster.transform.position) < range))
+            {
+                if(result == null || Vector2.Distance(pos, result.transform.position) > Vector2.Distance(pos, monster.transform.position))
+                    result = monster;
+            }
+        }
+
+        return result;
+    }
+
+    public CharController FirstChar()
+    {
+        CharController result = null;
+
+        for(int i = 0; i < charList.Count; i++) 
+        {
+            if (charList[i].Sm.CurState != charList[i].DicState[CharState.Die])
+            {
+                result = charList[i];
+                break;
+            }
+        }
+
+        return result;
+    }
 }
