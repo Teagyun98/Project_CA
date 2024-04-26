@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public class Archer : CharController
 {
     public override void Awake()
@@ -19,5 +21,15 @@ public class Archer : CharController
     public override void FixedUpdate()
     {
         base.FixedUpdate();
+    }
+
+    public void AttackEnd()
+    {
+        if (target != null && Vector2.Distance(transform.position, target.transform.position) < status.attackDistance)
+        {
+            target.GetDamage(status.attackPower);
+        }
+
+        Sm.SetState(DicState[CharState.Idle]);
     }
 }

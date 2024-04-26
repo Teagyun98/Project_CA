@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
+using static UnityEngine.RuleTile.TilingRuleOutput;
 
 
 public enum MonsterState
@@ -20,7 +22,6 @@ public class MonsterIdle : CharState<MonsterController>
     public void OperateEnter(MonsterController sender) 
     {
         controller = sender;
-        attackDelay = controller.AttackDelay;
         controller.Animator.SetBool("Idle", true);
     }
     public void OperateExit(MonsterController sender) { controller.Animator.SetBool("Idle", false); }
@@ -33,6 +34,11 @@ public class MonsterIdle : CharState<MonsterController>
             controller.Sm.SetState(controller.DicState[MonsterState.Run]);
         else
             controller.Sm.SetState(controller.DicState[MonsterState.Attack]);
+
+        if (controller.target != null && Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.AttackDistance)
+        {
+            controller.Sm.SetState(controller.DicState[attackDelay <= 0 ? MonsterState.Attack : MonsterState.Idle]);
+        }
 
     }
     public void OperateFixedUpdate(MonsterController sender) { }
@@ -55,12 +61,14 @@ public class MonsterRun : CharState<MonsterController>
         if (controller.target == null)
             return;
 
-        controller.ScaleInversion(controller.transform.position.x < controller.target.transform.position.x ? true : false);
+        controller.ScaleInversion(controller.transform.position.x < controller.target.transform.position.x);
 
         controller.transform.position = Vector2.MoveTowards(controller.transform.position, controller.target.transform.position, 1 * Time.fixedDeltaTime);
 
-        if (Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.AttackDistance)
-            controller.Sm.SetState(controller.DicState[MonsterState.Attack]);
+        if (controller.target != null && Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.AttackDistance)
+        {
+            controller.Sm.SetState(controller.DicState[controller.AttackDelay <= 0 ? MonsterState.Attack : MonsterState.Idle]);
+        }
     }
 }
 
@@ -89,7 +97,7 @@ public class MonsterDeath : CharState<MonsterController>
 
         controller.Animator.SetBool("Death", true);
     }
-    public void OperateExit(MonsterController sender) { controller.Animator.SetBool("Death", true); }
+    public void OperateExit(MonsterController sender) { controller.Animator.SetBool("Death", false); }
     public void OperateUpdate(MonsterController sender) { }
     public void OperateFixedUpdate(MonsterController sender) { }
 }
@@ -140,9 +148,12 @@ public class MonsterController : MonoBehaviour
 
     private void Update()
     {
+        if(AttackDelay > 0)
+            AttackDelay -= Time.deltaTime;
+
         target = GameManager.Instance.NearChar(transform.position);
 
-        if (target == null && Sm.CurState != DicState[MonsterState.Idle])
+        if (target == null && Sm.CurState != DicState[MonsterState.Idle] && Sm.CurState != DicState[MonsterState.Death])
             Sm.SetState(DicState[MonsterState.Idle]);
 
         Sm.DoOperateUpdate();
@@ -156,6 +167,7 @@ public class MonsterController : MonoBehaviour
     public void AttackEnd()
     {
         Sm.SetState(DicState[MonsterState.Idle]);
+        AttackDelay = GameManager.Instance.monsterAttackDelay;
     }
 
     public void ScaleInversion(bool check)

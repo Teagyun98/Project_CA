@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
+using static UnityEngine.RuleTile.TilingRuleOutput;
 
 public enum CharState
 {
@@ -34,7 +36,13 @@ public class CharIdle : CharState<CharController>
         controller.Animator.SetBool("Idle", true);
 	}
 
-    public void OperateUpdate(CharController sender) { }
+    public void OperateUpdate(CharController sender) 
+    {
+        if (controller.target != null && Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.status.attackDistance)
+        {
+            controller.Sm.SetState(controller.DicState[controller.AttackDelay <= 0 ? CharState.Casting : CharState.Idle]);
+        }
+    }
     public void OperateFixedUpdate(CharController sender) { }
 
     public void OperateExit(CharController sender) 
@@ -53,26 +61,29 @@ public class CharWalk : CharState<CharController>
 
         controller.Animator.SetBool("Walk", true);
     }
+    public void OperateUpdate(CharController sender) 
+    {
+        if (controller.target != null && Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.status.attackDistance)
+        {
+            controller.Sm.SetState(controller.DicState[controller.AttackDelay <= 0 ? CharState.Casting : CharState.Idle]);
+        }
+    }
 
-    public void OperateUpdate(CharController sender) { }
     public void OperateFixedUpdate(CharController sender) 
     {
         if (controller.target == null)
         {
             Vector2 targetPos = GameManager.Instance.FirstChar().transform.position;
 
-            controller.ScaleInversion(controller.transform.position.x < targetPos.x ? true : false);
+            controller.ScaleInversion(controller.transform.position.x < targetPos.x);
 
             controller.transform.position = Vector2.MoveTowards(controller.transform.position, targetPos, 2 * Time.fixedDeltaTime);
         }
         else
         {
-            controller.ScaleInversion(controller.transform.position.x < controller.target.transform.position.x ? true : false);
+            controller.ScaleInversion(controller.transform.position.x < controller.target.transform.position.x);
 
             controller.transform.position = Vector2.MoveTowards(controller.transform.position, controller.target.transform.position, 2 * Time.fixedDeltaTime);
-
-            if (Vector2.Distance(controller.transform.position, controller.target.transform.position) < controller.status.attackDistance)
-                controller.Sm.SetState(controller.DicState[CharState.Casting]);
         }
     }
 
@@ -249,6 +260,8 @@ public class CharController : MonoBehaviour
     public Animator Animator { get; private set; }
     public MonsterController target;
 
+    public float AttackDelay { get; private set; }
+
     public virtual void Awake()
     {
         Animator = GetComponent<Animator>();
@@ -276,10 +289,14 @@ public class CharController : MonoBehaviour
 		};
 
         Sm = new StateMachine<CharController>(this, DicState[CharState.Idle]);
+        AttackDelay = 0;
     }
 
     public virtual void Update()
 	{
+        if(AttackDelay > 0)
+            AttackDelay -= Time.deltaTime;
+
         CharController firstChar = GameManager.Instance.FirstChar();
 
         target = GameManager.Instance.NearMonster(transform.position, firstChar == this ? 0 : status.attackDistance);
@@ -298,12 +315,7 @@ public class CharController : MonoBehaviour
     public void CastingEnd()
     {
         Sm.SetState(DicState[CharState.Attack]);
-    }
-
-    public void AttackEnd()
-    {
-        if (target != null && Vector2.Distance(transform.position, target.transform.position) < status.attackDistance)
-            target.GetDamage(status.attackPower);
+        AttackDelay = status.attackDelay;
     }
 
     public void ScaleInversion(bool check)

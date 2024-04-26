@@ -49,6 +49,11 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    private void Start()
+    {
+        StartCoroutine(SpawnGoblin());
+    }
+
     private void FixedUpdate()
     {
         Camera.main.transform.position = FirstChar().transform.position + new Vector3(0,0,-10);
@@ -73,7 +78,7 @@ public class GameManager : MonoBehaviour
     public MonsterController NearMonster(Vector2 pos, float range) 
     {
         MonsterController result = null;
-        MonsterController monster = null;
+        MonsterController monster;
 
         for (int i = 0; i< monsterArea.childCount; i++)
         {
@@ -114,7 +119,7 @@ public class GameManager : MonoBehaviour
         return result;
     }
 
-    public void SpawnGoblin()
+    public IEnumerator SpawnGoblin()
     {
         MonsterController _goblin  = null;
 
@@ -134,5 +139,9 @@ public class GameManager : MonoBehaviour
             _goblin = Instantiate(goblin, monsterArea);
 
         _goblin.transform.position = FirstChar().transform.position + new Vector3(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-10, 10));
+
+        yield return new WaitForSeconds(monsterSpawnTime);
+
+        StartCoroutine(SpawnGoblin());
     }
 }
