@@ -137,6 +137,8 @@ public class GameManager : MonoBehaviour
     // 고블린 스폰 코루틴
     public IEnumerator SpawnGoblin()
     {
+        yield return new WaitForSeconds(monsterSpawnTime);
+
         MonsterController _goblin  = null;
 
         // 풀링
@@ -156,8 +158,6 @@ public class GameManager : MonoBehaviour
             _goblin = Instantiate(goblin, monsterArea);
 
         _goblin.transform.position = FirstChar().transform.position + new Vector3(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-10, 10));
-
-        yield return new WaitForSeconds(monsterSpawnTime);
 
         StartCoroutine(SpawnGoblin());
     }
