@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 // 캐릭터 기본 스탯 클래스
 [Serializable]
@@ -47,6 +48,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private List<CharController> charList;
     // 몬스터 스폰 Transform
     [SerializeField] private Transform monsterArea;
+    [SerializeField] private Button gameStartBtn;
+
+    public bool GameOver { get; private set; }
 
     private void Awake()
     {
@@ -59,6 +63,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        GameOver = true;
         // 고블린 소환 함수
         StartCoroutine(SpawnGoblin());
     }
@@ -66,7 +71,8 @@ public class GameManager : MonoBehaviour
     private void FixedUpdate()
     {
         // 카메라가 첫번째 캐릭터를 따라 이동
-        Camera.main.transform.position = FirstChar().transform.position + new Vector3(0,0,-10);
+        if (FirstChar() != null)
+            Camera.main.transform.position = Vector3.MoveTowards(Camera.main.transform.position,FirstChar().transform.position + new Vector3(0,0,-10), 2);
     }
 
     // 가까이 있는 캐릭터 반환 함수
@@ -98,7 +104,7 @@ public class GameManager : MonoBehaviour
         {
             monster = null;
 
-            if(monsterArea.GetChild(i).GetComponent<MonsterController>())
+            if(monsterArea.GetChild(i).GetComponent<MonsterController>() && monsterArea.GetChild(i).gameObject.activeSelf == true)
             {
                 monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
 
@@ -107,7 +113,7 @@ public class GameManager : MonoBehaviour
             }
 
             // 첫번째 캐릭터는 탐색 범위와 상관없이 몬스터를 쫒는다.
-            if(monster != null && (range == 0 || Vector2.Distance(pos, monster.transform.position) < range))
+            if(monster != null && (range == 0 || Vector2.Distance(pos, monster.transform.position) <= range))
             {
                 if(result == null || Vector2.Distance(pos, result.transform.position) > Vector2.Distance(pos, monster.transform.position))
                     result = monster;
@@ -137,28 +143,105 @@ public class GameManager : MonoBehaviour
     // 고블린 스폰 코루틴
     public IEnumerator SpawnGoblin()
     {
-        yield return new WaitForSeconds(monsterSpawnTime);
+        if(GameOver == false)
+		{
+            MonsterController _goblin = null;
 
-        MonsterController _goblin  = null;
-
-        // 풀링
-        for(int i = 0; i < monsterArea.childCount; i++) 
-        {
-            MonsterController monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
-
-            if (monster.Sm.CurState == monster.DicState[MonsterState.Death])
+            // 풀링
+            for (int i = 0; i < monsterArea.childCount; i++)
             {
-                _goblin = monster;
-                _goblin.Resurrection();
-                break;
+                MonsterController monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
+
+                if (monster.Sm.CurState == monster.DicState[MonsterState.Death] || monster.gameObject.activeSelf == false)
+                {
+                    _goblin = monster;
+
+                    // 비활성화된 고블리 활성화
+                    if (_goblin.gameObject.activeSelf == false)
+                        _goblin.gameObject.SetActive(true);
+
+                    _goblin.Resurrection();
+                    break;
+                }
             }
+
+            if (_goblin == null)
+                _goblin = Instantiate(goblin, monsterArea);
+
+            _goblin.transform.position = FirstChar().transform.position + new Vector3(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-10, 10));
+
         }
 
-        if (_goblin == null)
-            _goblin = Instantiate(goblin, monsterArea);
-
-        _goblin.transform.position = FirstChar().transform.position + new Vector3(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-10, 10));
+        yield return new WaitForSeconds(monsterSpawnTime);
 
         StartCoroutine(SpawnGoblin());
     }
+
+    // 캐릭터가 모두 사망시 게임 오버
+    public void CheckGameOver()
+	{
+        foreach(CharController character in charList)
+		{
+            if(character.Sm.CurState != character.DicState[CharState.Die])
+			{
+                GameOver = false;
+                return;
+			}
+		}
+
+        GameOver = true;
+        gameStartBtn.gameObject.SetActive(true);
+	}
+
+    // 살아있는 캐릭터 중 최대체력 대비 체력이 가장 적은 캐릭터 반환
+    public CharController GetLowHpChar(Vector2 pos , float distance)
+	{
+        CharController result = null;
+
+        foreach (CharController character in charList)
+		{
+            if (character.hp < character.status.hp && Vector2.Distance(pos, character.transform.position) <= distance && character.Sm.CurState != character.DicState[CharState.Die])
+                result = result == null || result.hp / result.status.hp > character.hp / character.status.hp ? character : result;
+		}
+
+        return result;
+	}
+
+    // 살아있는 몬스터 중 인자로 받은 위치에서 범위 내 모든 몬스터를 반환
+    public List<MonsterController> GetDistanceMonsters(Vector2 pos, float distance)
+	{
+        List<MonsterController> list = new List<MonsterController>();
+
+        for (int i = 0; i < monsterArea.childCount; i++)
+        {
+            MonsterController monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
+
+            if (monster.Sm.CurState != monster.DicState[MonsterState.Death] && Vector2.Distance(pos, monster.transform.position) <= distance)
+                list.Add(monster);
+        }
+
+        return list;
+	}
+
+    public void GameStart()
+	{
+        GameOver = false;
+
+        // 몬스터 비활성화
+        for(int i =  0; i < monsterArea.childCount; i++)
+		{
+            monsterArea.GetChild(i).gameObject.SetActive(false);
+		}
+
+        // 캐릭터 초기화
+        for(int i = 0; i<charList.Count; i++)
+		{
+            charList[i].transform.position = new Vector3(i, 0, 0);
+            charList[i].hp = charList[i].status.hp;
+            charList[i].target = null;
+            charList[i].Sm.SetState(charList[i].DicState[CharState.Idle]);
+		}
+
+        gameStartBtn.gameObject.SetActive(false);
+	}
 }

@@ -119,7 +119,7 @@ public class MonsterController : MonoBehaviour
     // 최대 HP
     public int MaxHp { get; private set; }
     // 현재 HP
-    private int hp;
+    private float hp;
     // 공격력
     public int AttackPower { get; private set; }
     // 공격 딜레이
@@ -130,6 +130,8 @@ public class MonsterController : MonoBehaviour
     // 목표 캐릭터
     public CharController target;
 
+    private float stun;
+
     private void Awake()
     {
         // 애니메이터 초기화
@@ -138,6 +140,8 @@ public class MonsterController : MonoBehaviour
 
     private void Start()
     {
+        stun = 0;
+
         // 몬스터 수치들 가져오기
         MaxHp = GameManager.Instance.monsterHp;
         hp = MaxHp;
@@ -166,8 +170,18 @@ public class MonsterController : MonoBehaviour
 
     private void Update()
     {
+        if (GameManager.Instance.GameOver)
+            return;
+
+        // 상태이상 중에는 반환
+        if (stun > 0)
+		{
+            stun -= Time.deltaTime;
+            return;
+        }
+
         // 공격 딜레이
-        if(AttackDelay > 0)
+        if (AttackDelay > 0)
             AttackDelay -= Time.deltaTime;
 
         // 목표 캐릭터 가져오기
@@ -183,6 +197,13 @@ public class MonsterController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (GameManager.Instance.GameOver)
+            return;
+
+        // 상태이상 중에는 반환
+        if (stun > 0)
+            return;
+
         // StateMachine FixedUpdate문
         Sm.DoOperateFixedUpdate();
     }
@@ -194,6 +215,10 @@ public class MonsterController : MonoBehaviour
         Sm.SetState(DicState[MonsterState.Idle]);
         // 공격 딜레이 초기화
         AttackDelay = GameManager.Instance.monsterAttackDelay;
+
+        // 목표 캐릭터가 공격 범위에 있고 공격 딜레이가 0보다 작으면 Attack 아니면 Idle 상태로 변경
+        if (target != null && Vector2.Distance(transform.position, target.transform.position) < AttackDistance)
+            target.GetDamage(AttackPower);
     }
 
     // 몬스터 스케일 변환 함수
@@ -204,7 +229,7 @@ public class MonsterController : MonoBehaviour
 	}
 
     // 몬스터가 공격 받을 때 사용되는 함수
-    public void GetDamage(int damage)
+    public void GetDamage(float damage)
     {
         hp -= damage;
 
@@ -219,4 +244,9 @@ public class MonsterController : MonoBehaviour
         hp = MaxHp;
         Sm.SetState(DicState[MonsterState.Idle]);
     }
+
+    public void GetStun(float time)
+	{
+        stun += time;
+	}
 }
