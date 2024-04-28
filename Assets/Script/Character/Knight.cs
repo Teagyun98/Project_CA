@@ -34,13 +34,13 @@ public class Knight : CharController
 			{
                 // 스턴
                 target.GetStun(1);
-                target.GetDamage(status.attackPower);
+                target.GetDamage(status.attackPower, this);
                 // 스킬 딜레이 초기화
                 skillDelay = status.skillDelay;
             }
             else if(attackDelay <= 0 && Vector2.Distance(transform.position, target.transform.position) < status.attackDistance)
 			{
-                target.GetDamage(status.attackPower);
+                target.GetDamage(status.attackPower, this);
                 // 공격 딜레이 초기화
                 attackDelay = status.attackDelay;
             }

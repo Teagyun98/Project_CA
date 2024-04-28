@@ -304,6 +304,8 @@ public class CharController : MonoBehaviour
     public float attackDelay;
     public float skillDelay;
     public float hp;
+    public int Level { get; private set; }
+    public int exp;
 
     public virtual void Awake()
     {
@@ -337,9 +339,7 @@ public class CharController : MonoBehaviour
         // StateMachine 생성 및 초기 상태 설정
         Sm = new StateMachine<CharController>(this, DicState[CharState.Idle]);
 
-        // 공격 딜레이 초기화
-        attackDelay = 0;
-        skillDelay = 0;
+        ResetChar();
     }
 
     public virtual void Update()
@@ -406,14 +406,40 @@ public class CharController : MonoBehaviour
 	}
 
     // 캐릭터 부활
-    public IEnumerator Resurrection(bool now = false)
+    public IEnumerator Resurrection()
     {
-        yield return new WaitForSeconds(now ? 0 : 5);
+        yield return new WaitForSeconds(5);
 
-        if (GameManager.Instance.GameOver == false)
+        if (GameManager.Instance.GameOver == false && Sm.CurState == DicState[CharState.Die])
 		{
             hp = status.hp;
             Sm.SetState(DicState[CharState.Idle]);
         }
     }
+
+    public void ResetChar()
+	{
+        hp = status.hp;
+        Sm.SetState(DicState[CharState.Idle]);
+        target = null;
+
+        // 공격 딜레이 초기화
+        attackDelay = 0;
+        skillDelay = 0;
+
+        // 레벨, 경험치 초기화
+        Level = 1;
+        exp = 0;
+    }
+
+    public void SetExp(int num)
+	{
+        exp += num;
+
+        if(exp == 10+Level)
+		{
+            Level++;
+            exp = 0;
+		}
+	}
 }

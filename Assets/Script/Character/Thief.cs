@@ -33,13 +33,13 @@ public class Thief : CharController
             {
                 // 근처의 몬스터들에게 스킬 공격
                 foreach (MonsterController monster in GameManager.Instance.GetDistanceMonsters(transform.position, status.skillDistance))
-                    monster.GetDamage(status.attackPower);
+                    monster.GetDamage(status.attackPower, this);
                 // 스킬 딜레이 초기화
                 skillDelay = status.skillDelay;
             }
             else if (attackDelay <= 0 && Vector2.Distance(transform.position, target.transform.position) < status.attackDistance)
             {
-                target.GetDamage(status.attackPower);
+                target.GetDamage(status.attackPower, this);
                 // 공격 딜레이 초기화
                 attackDelay = status.attackDelay;
             }

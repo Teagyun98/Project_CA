@@ -237,9 +237,7 @@ public class GameManager : MonoBehaviour
         for(int i = 0; i<charList.Count; i++)
 		{
             charList[i].transform.position = new Vector3(i, 0, 0);
-            charList[i].hp = charList[i].status.hp;
-            charList[i].target = null;
-            charList[i].Sm.SetState(charList[i].DicState[CharState.Idle]);
+            charList[i].ResetChar();
 		}
 
         gameStartBtn.gameObject.SetActive(false);

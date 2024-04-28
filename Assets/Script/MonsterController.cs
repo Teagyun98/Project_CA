@@ -229,13 +229,16 @@ public class MonsterController : MonoBehaviour
 	}
 
     // 몬스터가 공격 받을 때 사용되는 함수
-    public void GetDamage(float damage)
+    public void GetDamage(float damage, CharController charController)
     {
         hp -= damage;
 
         // 데미지를 받고 hp가 0보다 적어지면 Death 상태로 변환
         if (hp <= 0)
+		{
             Sm.SetState(DicState[MonsterState.Death]);
+            charController.SetExp(1);
+        }
     }
 
     // 몬스터 부활 함수

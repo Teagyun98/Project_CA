@@ -50,7 +50,7 @@ public class Priest : CharController
         {
             if (attackDelay <= 0 && Vector2.Distance(transform.position, target.transform.position) < status.attackDistance)
             {
-                target.GetDamage(status.attackPower);
+                target.GetDamage(status.attackPower, this);
                 // 공격 딜레이 초기화
                 attackDelay = status.attackDelay;
             }

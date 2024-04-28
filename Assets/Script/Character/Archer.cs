@@ -32,13 +32,13 @@ public class Archer : CharController
             if (skillDelay <= 0 && Vector2.Distance(transform.position, target.transform.position) < status.skillDistance)
             {
                 // 멀리 있는 몬스터 스킬 공격
-                target.GetDamage(status.attackPower * 2.5f);
+                target.GetDamage(status.attackPower * 2.5f, this);
                 // 스킬 딜레이 초기화
                 skillDelay = status.skillDelay;
             }
             else if (attackDelay <= 0 && Vector2.Distance(transform.position, target.transform.position) < status.attackDistance)
             {
-                target.GetDamage(status.attackPower);
+                target.GetDamage(status.attackPower, this);
                 // 공격 딜레이 초기화
                 attackDelay = status.attackDelay;
             }
