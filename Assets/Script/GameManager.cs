@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -49,8 +50,12 @@ public class GameManager : MonoBehaviour
     // 몬스터 스폰 Transform
     [SerializeField] private Transform monsterArea;
     [SerializeField] private Button gameStartBtn;
+    [SerializeField] private TextMeshProUGUI stageText;
 
     public bool GameOver { get; private set; }
+    public int Stage { get; private set; }
+    public int stageExp;
+    public int gold;
 
     private void Awake()
     {
@@ -143,7 +148,17 @@ public class GameManager : MonoBehaviour
     // 고블린 스폰 코루틴
     public IEnumerator SpawnGoblin()
     {
-        if(GameOver == false)
+        int activeMonsterNum = 0;
+
+        for(int i = 0; i < monsterArea.childCount; i++)
+		{
+            MonsterController monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
+
+            if (monster != null && monster.gameObject.activeSelf == true && monster.Sm.CurState != monster.DicState[MonsterState.Death])
+                activeMonsterNum++;
+		}
+
+        if(GameOver == false && activeMonsterNum < 5)
 		{
             MonsterController _goblin = null;
 
@@ -160,13 +175,33 @@ public class GameManager : MonoBehaviour
                     if (_goblin.gameObject.activeSelf == false)
                         _goblin.gameObject.SetActive(true);
 
-                    _goblin.Resurrection();
+                    bool boss = false;
+
+                    if(stageExp > 10)
+					{
+                        stageExp -= 10;
+                        boss = true;
+					}
+
+                    _goblin.Resurrection(boss);
                     break;
                 }
             }
 
             if (_goblin == null)
+			{
                 _goblin = Instantiate(goblin, monsterArea);
+
+                bool boss = false;
+
+                if (stageExp > 10)
+                {
+                    stageExp -= 10;
+                    boss = true;
+                }
+
+                _goblin.SetStatus(boss);
+            }
 
             _goblin.transform.position = FirstChar().transform.position + new Vector3(UnityEngine.Random.Range(-10, 10), UnityEngine.Random.Range(-10, 10));
 
@@ -226,6 +261,10 @@ public class GameManager : MonoBehaviour
     public void GameStart()
 	{
         GameOver = false;
+        Stage = 1;
+        stageText.text = $"Stage{Stage}";
+        stageExp = 0;
+        gold = 0;
 
         // 몬스터 비활성화
         for(int i =  0; i < monsterArea.childCount; i++)
@@ -241,5 +280,11 @@ public class GameManager : MonoBehaviour
 		}
 
         gameStartBtn.gameObject.SetActive(false);
+	}
+
+    public void NextStage()
+	{
+        Stage++;
+        stageText.text = $"Stage{Stage}";
 	}
 }

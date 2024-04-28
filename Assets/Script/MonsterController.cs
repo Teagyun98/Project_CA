@@ -16,17 +16,29 @@ public class MonsterIdle : CharState<MonsterController>
 {
     MonsterController controller;
 
+    private float patrolTime;
+
     public void OperateEnter(MonsterController sender) 
     {
         controller = sender;
         controller.Animator.SetBool("Idle", true);
+
+        patrolTime = 0;
     }
     public void OperateExit(MonsterController sender) { controller.Animator.SetBool("Idle", false); }
     public void OperateUpdate(MonsterController sender) 
     {
         // 목표 캐릭터가 없는 경우 반환
         if (controller.target == null)
+		{
+            patrolTime += Time.deltaTime;
+
+            if (patrolTime > 5)
+                controller.Sm.SetState(controller.DicState[MonsterState.Run]);
+
             return;
+        }
+
 
         // 목표 캐릭터가 공격 범위보다 멀리 있는 경우 Run 상태로 변경
         if (Vector2.Distance(controller.transform.position, controller.target.transform.position) > controller.AttackDistance)
@@ -46,11 +58,16 @@ public class MonsterRun : CharState<MonsterController>
 {
     MonsterController controller;
 
+    Vector2 patrolPos;
+
     public void OperateEnter(MonsterController sender)
     {
         controller = sender;
 
         controller.Animator.SetBool("Run", true);
+
+        if (controller.target == null)
+            patrolPos = (Vector2)GameManager.Instance.FirstChar().transform.position + new Vector2(Random.Range(-10, 10), Random.Range(-10, 10));
     }
     public void OperateExit(MonsterController sender) { controller.Animator.SetBool("Run", false); }
     public void OperateUpdate(MonsterController sender) 
@@ -65,7 +82,18 @@ public class MonsterRun : CharState<MonsterController>
     {
         // 목표 캐릭터가 없으면 반환
         if (controller.target == null)
+		{
+            // 이동 방향과 맞게 몬스터 스케일 변경
+            controller.ScaleInversion(controller.transform.position.x < patrolPos.x);
+
+            // 목표로 1의 속도로 이동
+            controller.transform.position = Vector2.MoveTowards(controller.transform.position, patrolPos, 1 * Time.fixedDeltaTime);
+
+            if (Vector2.Distance(controller.transform.position, patrolPos) < 1)
+                controller.Sm.SetState(controller.DicState[MonsterState.Idle]);
+
             return;
+        }
 
         // 이동 방향과 맞게 몬스터 스케일 변경
         controller.ScaleInversion(controller.transform.position.x < controller.target.transform.position.x);
@@ -131,6 +159,7 @@ public class MonsterController : MonoBehaviour
     public CharController target;
 
     private float stun;
+    private bool boss;
 
     private void Awake()
     {
@@ -140,15 +169,6 @@ public class MonsterController : MonoBehaviour
 
     private void Start()
     {
-        stun = 0;
-
-        // 몬스터 수치들 가져오기
-        MaxHp = GameManager.Instance.monsterHp;
-        hp = MaxHp;
-        AttackPower = GameManager.Instance.monsterAttackPower;
-        AttackDelay = GameManager.Instance.monsterAttackDelay;
-        AttackDistance = GameManager.Instance.mosterAttackDistance;
-
         // 몬스터 상태들 생성
         CharState<MonsterController> idle = new MonsterIdle();
         CharState<MonsterController> run = new MonsterRun();
@@ -187,10 +207,6 @@ public class MonsterController : MonoBehaviour
         // 목표 캐릭터 가져오기
         target = GameManager.Instance.NearChar(transform.position);
 
-        // 목표 캐릭터가 없고 Idle 상태나 Death 상태가 아니라면 Idle상태로 변환
-        if (target == null && Sm.CurState != DicState[MonsterState.Idle] && Sm.CurState != DicState[MonsterState.Death])
-            Sm.SetState(DicState[MonsterState.Idle]);
-
         // StateMachine Update문
         Sm.DoOperateUpdate();
     }
@@ -221,6 +237,34 @@ public class MonsterController : MonoBehaviour
             target.GetDamage(AttackPower);
     }
 
+    public void SetStatus(bool boss = false)
+	{
+        this.boss = boss;
+
+        stun = 0;
+
+        MaxHp = GameManager.Instance.monsterHp;
+        hp = MaxHp;
+        AttackPower = GameManager.Instance.monsterAttackPower;
+        AttackDelay = GameManager.Instance.monsterAttackDelay;
+        AttackDistance = GameManager.Instance.mosterAttackDistance;
+
+        // 스테이지에 따라 몬스터 스텟 가산
+        MaxHp += MaxHp / 10 * GameManager.Instance.Stage;
+        AttackPower += AttackPower / 10 * GameManager.Instance.Stage;
+
+        if(boss)
+		{
+            MaxHp *= 10;
+            hp *= 10;
+            AttackPower *= 2;
+            AttackDistance *= 2;
+		}
+
+        // 보스 몬스터 색구분
+        transform.GetComponent<SpriteRenderer>().color = boss ? new Color32(255, 0, 0, 255) : new Color32(255, 255, 255, 255);
+    }
+
     // 몬스터 스케일 변환 함수
     public void ScaleInversion(bool check)
 	{
@@ -238,13 +282,16 @@ public class MonsterController : MonoBehaviour
 		{
             Sm.SetState(DicState[MonsterState.Death]);
             charController.SetExp(1);
+            GameManager.Instance.stageExp++;
+            if (boss)
+                GameManager.Instance.NextStage();
         }
     }
 
     // 몬스터 부활 함수
-    public void Resurrection()
+    public void Resurrection(bool boss = false)
     {
-        hp = MaxHp;
+        SetStatus(boss);
         Sm.SetState(DicState[MonsterState.Idle]);
     }
 
