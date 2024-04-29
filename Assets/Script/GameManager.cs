@@ -51,11 +51,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform monsterArea;
     [SerializeField] private Button gameStartBtn;
     [SerializeField] private TextMeshProUGUI stageText;
+    [SerializeField] private TextMeshProUGUI goldText;
+    // 몬스터 UI
+    [SerializeField] private Transform monsterUIArea;
+    [SerializeField] private MonsterUI monsterUI;
 
     public bool GameOver { get; private set; }
     public int Stage { get; private set; }
     public int stageExp;
-    public int gold;
+    public int Gold { get; private set; }
 
     private void Awake()
     {
@@ -264,10 +268,11 @@ public class GameManager : MonoBehaviour
         Stage = 1;
         stageText.text = $"Stage{Stage}";
         stageExp = 0;
-        gold = 0;
+        Gold = 0;
+        goldText.text = $"Gold : {Gold}";
 
         // 몬스터 비활성화
-        for(int i =  0; i < monsterArea.childCount; i++)
+        for (int i =  0; i < monsterArea.childCount; i++)
 		{
             monsterArea.GetChild(i).gameObject.SetActive(false);
 		}
@@ -287,4 +292,35 @@ public class GameManager : MonoBehaviour
         Stage++;
         stageText.text = $"Stage{Stage}";
 	}
+
+    public void SetGold(int amount)
+    {
+        Gold += amount;
+
+        goldText.text = $"Gold : {Gold}";
+    }
+
+    public MonsterUI GetMonsterUI(MonsterController controller)
+    {
+        MonsterUI result = null;
+
+        for(int i = 0; i< monsterUIArea.childCount; i++) 
+        {
+            MonsterUI ui = monsterUIArea.GetChild(i).GetComponent<MonsterUI>();
+
+            if(ui.gameObject.activeSelf == false)
+            {
+                ui.gameObject.SetActive(true);
+                result = ui;
+                break;
+            }    
+        }
+
+        if(result == null)
+            result = Instantiate(monsterUI, monsterUIArea);
+
+        result.SetMonster(controller);
+
+        return result;
+    }
 }

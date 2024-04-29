@@ -39,7 +39,7 @@ public class Priest : CharController
         if (lowHpChar != null && skillDelay <= 0 && Vector2.Distance(transform.position, lowHpChar.transform.position) < status.skillDistance)
         {
             // 체력이 낮은 아군 회복
-            lowHpChar.hp += status.attackPower * 2.5f;
+            lowHpChar.hp += (status.attackPower + (status.attackPower/10*Level-1) )* 2.5f;
             // 스킬 딜레이 초기화
             skillDelay = status.skillDelay;
             Sm.SetState(DicState[CharState.Idle]);

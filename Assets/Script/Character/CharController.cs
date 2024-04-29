@@ -152,6 +152,10 @@ public class CharAttack : CharState<CharController>
         controller = sender;
 
         controller.Animator.SetBool("Attack", true);
+
+        if(controller.target != null)
+            // 캐릭터 공격방향에 맞게 바라보도록 Scale 조정
+            controller.ScaleInversion(controller.transform.position.x < controller.target.transform.position.x);
     }
 
     public void OperateUpdate(CharController sender) { }
@@ -305,7 +309,7 @@ public class CharController : MonoBehaviour
     public float skillDelay;
     public float hp;
     public int Level { get; private set; }
-    public int exp;
+    public int Exp { get; private set; }
 
     public virtual void Awake()
     {
@@ -429,17 +433,19 @@ public class CharController : MonoBehaviour
 
         // 레벨, 경험치 초기화
         Level = 1;
-        exp = 0;
+        Exp = 0;
     }
 
     public void SetExp(int num)
 	{
-        exp += num;
+        Exp += num;
 
-        if(exp == 10+Level)
+        if(Exp >= 10+Level)
 		{
             Level++;
-            exp = 0;
+            //레벨업시 체력 회복 및 가산
+            hp = status.hp + status.hp/10*(Level-1);
+            Exp -= 10 + Level;
 		}
 	}
 }

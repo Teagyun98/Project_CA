@@ -143,6 +143,7 @@ public class MonsterController : MonoBehaviour
     public StateMachine<MonsterController> Sm { get; private set; }
     // 애니메이터 변수
     public Animator Animator { get; private set; }
+    private MonsterUI ui;
 
     // 최대 HP
     public int MaxHp { get; private set; }
@@ -199,6 +200,9 @@ public class MonsterController : MonoBehaviour
             stun -= Time.deltaTime;
             return;
         }
+
+        if (ui != null)
+            ui.SetColor(false);
 
         // 공격 딜레이
         if (AttackDelay > 0)
@@ -275,16 +279,34 @@ public class MonsterController : MonoBehaviour
     // 몬스터가 공격 받을 때 사용되는 함수
     public void GetDamage(float damage, CharController charController)
     {
+        // 레벨당 데미지 가산
+        damage += damage / 10 * (charController.Level - 1);
         hp -= damage;
+
+        if (ui == null)
+        {
+            ui = GameManager.Instance.GetMonsterUI(this);
+        }
+
+        ui.SetSlider(hp / MaxHp);
 
         // 데미지를 받고 hp가 0보다 적어지면 Death 상태로 변환
         if (hp <= 0)
 		{
             Sm.SetState(DicState[MonsterState.Death]);
             charController.SetExp(1);
+            GameManager.Instance.SetGold(boss ? 100 : 10);
             GameManager.Instance.stageExp++;
+
             if (boss)
                 GameManager.Instance.NextStage();
+
+            if (ui != null)
+            {
+                ui.SetMonster(null);
+                ui.gameObject.SetActive(false);
+                ui = null;
+            }
         }
     }
 
@@ -298,5 +320,8 @@ public class MonsterController : MonoBehaviour
     public void GetStun(float time)
 	{
         stun += time;
+
+        if (ui != null)
+            ui.SetColor(true);
 	}
 }
