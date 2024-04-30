@@ -49,13 +49,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] private List<CharController> charList;
     // 몬스터 스폰 Transform
     [SerializeField] private Transform monsterArea;
-    [SerializeField] private Button gameStartBtn;
+    [SerializeField] private GameObject gameStartUI;
     [SerializeField] private TextMeshProUGUI stageText;
     [SerializeField] private TextMeshProUGUI goldText;
     // 몬스터 UI
     [SerializeField] private Transform monsterUIArea;
     [SerializeField] private MonsterUI monsterUI;
     [SerializeField] private EffectArea effectArea;
+    [SerializeField] private GameObject underUI;
 
     public bool GameOver { get; private set; }
     public int Stage { get; private set; }
@@ -242,7 +243,8 @@ public class GameManager : MonoBehaviour
 		}
 
         GameOver = true;
-        gameStartBtn.gameObject.SetActive(true);
+        gameStartUI.SetActive(true);
+        underUI.SetActive(false);
 	}
 
     // 살아있는 캐릭터 중 최대체력 대비 체력이 가장 적은 캐릭터 반환
@@ -304,7 +306,8 @@ public class GameManager : MonoBehaviour
             charList[i].ResetChar();
 		}
 
-        gameStartBtn.gameObject.SetActive(false);
+        gameStartUI.SetActive(false);
+        underUI.SetActive(true);
 	}
 
     // 스테이지 등반 함수
