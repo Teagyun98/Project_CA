@@ -33,6 +33,7 @@ public class Archer : CharController
             {
                 // 멀리 있는 몬스터 스킬 공격
                 target.GetDamage(status.attackPower * 2.5f, this);
+                GameManager.Instance.SetEffect(target.transform.position, "Red");
                 // 스킬 딜레이 초기화
                 skillDelay = status.skillDelay;
             }

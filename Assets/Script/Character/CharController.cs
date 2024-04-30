@@ -381,6 +381,7 @@ public class CharController : MonoBehaviour
         Sm.SetState(DicState[CharState.Attack]);
     }
 
+    // 피격 모션이 끝났을 때 남은 hp를 확인하고 상태 변경
     public void HurtEnd()
 	{
         if (hp <= 0)
@@ -396,12 +397,14 @@ public class CharController : MonoBehaviour
             transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
     }
 
+    // 데미지를 받으면 피격 상태로 변경
     public void GetDamage(float damage)
 	{
         hp -= damage;
         Sm.SetState(DicState[CharState.Hurt]);
 	}
 
+    // 캐릭터가 사망시 게임오버 여부를 확인하고 부활 코르틴 실행
     public void Die()
 	{
         GameManager.Instance.CheckGameOver();
@@ -414,6 +417,7 @@ public class CharController : MonoBehaviour
     {
         yield return new WaitForSeconds(5);
 
+        // 이미 게임오버 이거나 사망 상태가 아닐 시 부활 안함
         if (GameManager.Instance.GameOver == false && Sm.CurState == DicState[CharState.Die])
 		{
             hp = status.hp;
@@ -421,6 +425,7 @@ public class CharController : MonoBehaviour
         }
     }
 
+    // 캐릭터 스텟 초기화
     public void ResetChar()
 	{
         hp = status.hp;
@@ -436,6 +441,7 @@ public class CharController : MonoBehaviour
         Exp = 0;
     }
 
+    // 경험치 획득 함수
     public void SetExp(int num)
 	{
         Exp += num;

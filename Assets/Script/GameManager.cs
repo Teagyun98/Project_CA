@@ -55,6 +55,7 @@ public class GameManager : MonoBehaviour
     // 몬스터 UI
     [SerializeField] private Transform monsterUIArea;
     [SerializeField] private MonsterUI monsterUI;
+    [SerializeField] private EffectArea effectArea;
 
     public bool GameOver { get; private set; }
     public int Stage { get; private set; }
@@ -72,6 +73,13 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        // 게임 시작시에는 LandscapeLeft로 고정 하지만 게임 중에는 화면 회전이 가능하도록 변경
+        Screen.orientation = ScreenOrientation.AutoRotation;
+        Screen.autorotateToPortrait = true;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToLandscapeRight = true;
+        Screen.autorotateToLandscapeLeft = true;
+
         GameOver = true;
         // 고블린 소환 함수
         StartCoroutine(SpawnGoblin());
@@ -154,6 +162,7 @@ public class GameManager : MonoBehaviour
     {
         int activeMonsterNum = 0;
 
+        // 활동중인 몬스터 수 확인
         for(int i = 0; i < monsterArea.childCount; i++)
 		{
             MonsterController monster = monsterArea.GetChild(i).GetComponent<MonsterController>();
@@ -179,6 +188,7 @@ public class GameManager : MonoBehaviour
                     if (_goblin.gameObject.activeSelf == false)
                         _goblin.gameObject.SetActive(true);
 
+                    // 스테이지 경험치를 확인하여 보스 생성 여부 확인
                     bool boss = false;
 
                     if(stageExp > 10)
@@ -187,6 +197,7 @@ public class GameManager : MonoBehaviour
                         boss = true;
 					}
 
+                    // 기존 오브젝트를 이용할 경우 보스로 부활시키기
                     _goblin.Resurrection(boss);
                     break;
                 }
@@ -196,6 +207,7 @@ public class GameManager : MonoBehaviour
 			{
                 _goblin = Instantiate(goblin, monsterArea);
 
+                // 보스 여부 확인
                 bool boss = false;
 
                 if (stageExp > 10)
@@ -204,6 +216,7 @@ public class GameManager : MonoBehaviour
                     boss = true;
                 }
 
+                // 새로 생성한 몬스터일 경우 스텟을 세팅하며 보스로 생성
                 _goblin.SetStatus(boss);
             }
 
@@ -264,6 +277,7 @@ public class GameManager : MonoBehaviour
 
     public void GameStart()
 	{
+        // Game에 사용되는 변수들 초기화
         GameOver = false;
         Stage = 1;
         stageText.text = $"Stage{Stage}";
@@ -277,6 +291,12 @@ public class GameManager : MonoBehaviour
             monsterArea.GetChild(i).gameObject.SetActive(false);
 		}
 
+        // 몬스터 UI 비활성화
+        for(int i = 0; i< monsterUIArea.childCount; i++)
+        {
+            monsterUIArea.GetChild(i).gameObject.SetActive(false);
+        }
+
         // 캐릭터 초기화
         for(int i = 0; i<charList.Count; i++)
 		{
@@ -287,12 +307,14 @@ public class GameManager : MonoBehaviour
         gameStartBtn.gameObject.SetActive(false);
 	}
 
+    // 스테이지 등반 함수
     public void NextStage()
 	{
         Stage++;
         stageText.text = $"Stage{Stage}";
 	}
 
+    // 골드 획득 함수
     public void SetGold(int amount)
     {
         Gold += amount;
@@ -300,6 +322,7 @@ public class GameManager : MonoBehaviour
         goldText.text = $"Gold : {Gold}";
     }
 
+    // 몬스터 UI를 반환해주는 함수
     public MonsterUI GetMonsterUI(MonsterController controller)
     {
         MonsterUI result = null;
@@ -322,5 +345,11 @@ public class GameManager : MonoBehaviour
         result.SetMonster(controller);
 
         return result;
+    }
+
+    // 스킬 효과 함수
+    public void SetEffect(Vector3 pos, string color)
+    {
+        effectArea.Set(pos, color);
     }
 }

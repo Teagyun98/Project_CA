@@ -40,6 +40,7 @@ public class Priest : CharController
         {
             // 체력이 낮은 아군 회복
             lowHpChar.hp += (status.attackPower + (status.attackPower/10*Level-1) )* 2.5f;
+            GameManager.Instance.SetEffect(lowHpChar.transform.position, "Green");
             // 스킬 딜레이 초기화
             skillDelay = status.skillDelay;
             Sm.SetState(DicState[CharState.Idle]);

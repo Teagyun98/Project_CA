@@ -33,6 +33,7 @@ public class MonsterIdle : CharState<MonsterController>
 		{
             patrolTime += Time.deltaTime;
 
+            // 목표 캐릭터가 없는 경우가 5초 이상이 되면 Run 상태로 변경
             if (patrolTime > 5)
                 controller.Sm.SetState(controller.DicState[MonsterState.Run]);
 
@@ -66,6 +67,7 @@ public class MonsterRun : CharState<MonsterController>
 
         controller.Animator.SetBool("Run", true);
 
+        // 타겟이 없는 상태로 Run상태로 넘어왔다면 첫번째 캐릭터 주위의 위치를 목표로 순찰
         if (controller.target == null)
             patrolPos = (Vector2)GameManager.Instance.FirstChar().transform.position + new Vector2(Random.Range(-10, 10), Random.Range(-10, 10));
     }
@@ -241,6 +243,7 @@ public class MonsterController : MonoBehaviour
             target.GetDamage(AttackPower);
     }
 
+    // 몬스터 스탯 세팅 함수
     public void SetStatus(bool boss = false)
 	{
         this.boss = boss;
@@ -255,8 +258,10 @@ public class MonsterController : MonoBehaviour
 
         // 스테이지에 따라 몬스터 스텟 가산
         MaxHp += MaxHp / 10 * GameManager.Instance.Stage;
+        hp += hp / 10 * GameManager.Instance.Stage;
         AttackPower += AttackPower / 10 * GameManager.Instance.Stage;
 
+        // 보스 몬스터일 경우 추가 스텟
         if(boss)
 		{
             MaxHp *= 10;
@@ -279,12 +284,13 @@ public class MonsterController : MonoBehaviour
     // 몬스터가 공격 받을 때 사용되는 함수
     public void GetDamage(float damage, CharController charController)
     {
-        // 레벨당 데미지 가산
+        // 공격한 캐릭터 레벨당 데미지 가산
         damage += damage / 10 * (charController.Level - 1);
         hp -= damage;
 
         if (ui == null)
         {
+            // 처음 몬스터 생성시 HpBar가 없지만 피격시 생성
             ui = GameManager.Instance.GetMonsterUI(this);
         }
 
@@ -317,6 +323,7 @@ public class MonsterController : MonoBehaviour
         Sm.SetState(DicState[MonsterState.Idle]);
     }
 
+    // 스턴 함수
     public void GetStun(float time)
 	{
         stun += time;

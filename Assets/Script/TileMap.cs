@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TileMap : MonoBehaviour
 {
@@ -7,6 +7,7 @@ public class TileMap : MonoBehaviour
         Vector2 camPos = Camera.main.transform.position;
         Vector2 myPos = transform.position;
 
+        // 각 타일이 캐릭터의 위치와 자신의 위치를 비교해 재배치 될 수 있도록 함
         if((camPos.x < myPos.x && myPos.x - camPos.x > 30) || (camPos.x > myPos.x && camPos.x - myPos.x > 30) || (camPos.y < myPos.y && myPos.y - camPos.y > 30) || (camPos.y > myPos.y && camPos.y - myPos.y > 30))
         {
             float diffX = camPos.x - myPos.x;

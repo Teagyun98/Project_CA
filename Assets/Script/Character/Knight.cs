@@ -34,6 +34,7 @@ public class Knight : CharController
 			{
                 // 스턴
                 target.GetStun(1);
+                GameManager.Instance.SetEffect(target.transform.position, "Yellow");
                 target.GetDamage(status.attackPower, this);
                 // 스킬 딜레이 초기화
                 skillDelay = status.skillDelay;
