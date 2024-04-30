@@ -4,7 +4,7 @@
 
 ## 목차
   - [개요](#개요) 
-  - [필수 구현 요소(#필수-구현-요소)
+  - [필수 구현 요소](#필수-구현-요소)
   - [가산점 항목](#가산점-항목)
 
 ## 개요
@@ -13,7 +13,7 @@
 
 ## 필수 구현 요소
 |![GameStart](https://github.com/Teagyun98/Project_CA/assets/120551471/b48bcdbe-c21f-4541-9b4a-e019bc0b36b0)|![image](https://user-images.githubusercontent.com/66003567/216818272-8749569b-b217-4572-9738-32b0058459f4.png)|![InGame2](https://github.com/Teagyun98/Project_CA/assets/120551471/28b85fb2-a07f-4dd9-b153-b71cdf9295a5)|
-|:---:|:---:|
+|:---:|:---:|:---:|
 |시작 화면|게임 플레이 화면|
 
 캐릭터 직업은 탱커, 근거리 딜러, 원거리 딜러, 힐러 총 4개의 직업이 있습니다.<br>
